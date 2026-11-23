@@ -1,0 +1,65 @@
+run:
+  name: "mamba_tft_all"
+  seed: 42
+  artifacts_dir: "artifacts"
+  reports_dir: "reports"
+
+data:
+  csv_path: datasets/filtered_first.csv
+  index_is_time: true
+  daily_grid:
+    start_hour: 7
+    end_hour: 17
+  real_cols: ["rn","hm","ss","icsr","pv_output","pv_v","pv_i","pf"]
+  missing_flag_cols: ["pv_v","pv_i","pf","pv_output"]
+  fillna_value: 0.0
+  group_id_value: "site0"
+
+split:
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+tft:
+  max_encoder_length: 77
+  max_prediction_length: 11
+  batch_size: 32
+  max_epochs: 200
+
+  hidden_size: 32
+  dropout: 0.6
+  attention_head_size: 1
+  learning_rate: 0.001
+  quantiles: [0.1, 0.5, 0.9]
+
+  # Mamba-TFT 추가 설정
+  # joint: 기존 encoder+decoder 연결 Mamba
+  # separate_encoder_decoder: 과거 encoder와 causal future decoder를 별도 Mamba로 처리
+  mamba_architecture: separate_encoder_decoder
+  mamba_layers: 1
+  mamba_d_state: 16
+  mamba_d_conv: 3
+  mamba_expand: 2
+
+  encoder_mamba_layers: 1
+  encoder_mamba_d_state: 16
+  encoder_mamba_d_conv: 2
+  encoder_mamba_expand: 2
+
+  decoder_mamba_layers: 1
+  decoder_mamba_d_state: 16
+  decoder_mamba_d_conv: 2
+  decoder_mamba_expand: 2
+
+  gradient_clip_val: 0.1
+
+features:
+  target: "pv_output"
+  group_ids: ["series_id"]
+  known_reals: ["hour","dayofweek","month","rn","hm","ss","icsr"]
+  future_available_reals: ["rn","hm","ss","icsr"]
+  unknown_reals: ["pv_output","pv_v","pv_i","pf"]
+
+eval:
+  hours_from: 7
+  hours_to: 17

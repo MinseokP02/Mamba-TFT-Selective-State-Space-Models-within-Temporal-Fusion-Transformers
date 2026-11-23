@@ -1,0 +1,129 @@
+run:
+  name: "mamba_tft_utrecht_weather_single_id"
+  seed: 42
+  artifacts_dir: "artifacts"
+  reports_dir: "reports"
+
+data:
+  csv_path: datasets/tft_utrecht_ID003_weather_07_17.csv
+
+  # EDA 코드에서 이미 timestamp/time_idx/hour/dayofweek/month 등을 생성한 경우
+  index_is_time: false
+
+  daily_grid:
+    start_hour: 7
+    end_hour: 17  
+
+  # 실제 CSV에 존재하는 실수형 컬럼들
+  real_cols:
+    - temperature_2m
+    - relative_humidity_2m
+  #  - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+    - pv_output
+
+  # 현재 만든 데이터셋에서는 pv_missing_flag가 이미 따로 있음
+  # 기존 코드가 missing_flag_cols를 반드시 요구하지 않으면 빈 리스트 추천
+  missing_flag_cols: []
+
+  fillna_value: 0.0
+
+  group_id_value: "site0"
+
+split:
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+tft:
+  max_encoder_length: 77
+  max_prediction_length: 11
+
+  batch_size: 64
+  max_epochs: 100
+  hidden_size: 128
+  dropout: 0.4
+  attention_head_size: 1
+
+  # 모든 예측 horizon이 미래 11시간의 known feature 전체를 참조한다.
+  # decoder에는 미래 pv_output이 포함되지 않으므로 target leakage는 발생하지 않는다.
+  causal_attention: true
+
+  learning_rate: 0.0001
+
+  quantiles: [0.1, 0.5, 0.9]
+
+  # Mamba-TFT 추가 설정
+  # joint: 기존 encoder+decoder 연결 Mamba
+  # separate_encoder_decoder: 과거 encoder와 causal future decoder를 별도 Mamba로 처리
+  mamba_architecture: separate_encoder_decoder
+  mamba_layers: 1
+  mamba_d_state: 16
+  mamba_d_conv: 2
+  mamba_expand: 2
+
+  encoder_mamba_layers: 1
+  encoder_mamba_d_state: 16
+  encoder_mamba_d_conv: 2
+  encoder_mamba_expand: 2
+
+  decoder_mamba_layers: 1
+  decoder_mamba_d_state: 16
+  decoder_mamba_d_conv: 2
+  decoder_mamba_expand: 2
+ 
+  gradient_clip_val: 0.1
+
+features:
+  target: "pv_output"
+
+  group_ids: ["series_id"]
+
+  known_reals:
+    - time_idx
+    - hour
+    - dayofweek
+    - month
+    - dayofyear
+    - year
+    - is_daylight
+
+    # Open-Meteo weather covariates
+    - temperature_2m
+    - relative_humidity_2m
+    - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+
+  future_available_reals:
+    - temperature_2m
+    - relative_humidity_2m
+    - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+
+  unknown_reals:
+    - pv_output
+
+eval:
+  hours_from: 7
+  hours_to: 17

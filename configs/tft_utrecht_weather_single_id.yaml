@@ -1,0 +1,105 @@
+run:
+  name: "tft_utrecht_weather_single_id"
+  seed: 42
+  artifacts_dir: "artifacts"
+  reports_dir: "reports"
+
+data:
+  csv_path: datasets/tft_utrecht_ID003_weather_07_17.csv
+
+  # EDA 코드에서 이미 timestamp/time_idx/hour/dayofweek/month 등을 생성한 경우
+  index_is_time: false
+
+  daily_grid:
+    start_hour: 7
+    end_hour: 17  
+
+  # 실제 CSV에 존재하는 실수형 컬럼들
+  real_cols:
+    - temperature_2m
+    - relative_humidity_2m
+    - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+    - pv_output
+
+  # 현재 만든 데이터셋에서는 pv_missing_flag가 이미 따로 있음
+  # 기존 코드가 missing_flag_cols를 반드시 요구하지 않으면 빈 리스트 추천
+  missing_flag_cols: []
+
+  fillna_value: 0.0
+
+  group_id_value: "site0"
+
+split:
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+tft:
+  max_encoder_length: 77
+  max_prediction_length: 11
+
+  batch_size: 128
+  max_epochs: 100
+  hidden_size: 64
+  lstm_layers: 1
+  dropout: 0.6
+  attention_head_size: 1
+
+  learning_rate: 0.0009
+
+  quantiles: [0.1, 0.5, 0.9]
+
+features:
+  target: "pv_output"
+
+  group_ids: ["series_id"]
+
+  known_reals:
+    - time_idx
+    - hour
+    - dayofweek
+    - month
+    - dayofyear
+    - year
+    - is_daylight
+
+    # Open-Meteo weather covariates
+    - temperature_2m
+    - relative_humidity_2m
+    - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+
+  future_available_reals:
+    - temperature_2m
+    - relative_humidity_2m
+    - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+
+  unknown_reals:
+    - pv_output
+
+eval:
+  hours_from: 7
+  hours_to: 17

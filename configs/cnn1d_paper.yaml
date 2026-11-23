@@ -1,0 +1,56 @@
+seed: 42
+
+data:
+  csv_path: "datasets/filtered_first.csv"
+  parse_dates: [0]
+  index_col: 0
+
+  group_col: "series_id"
+  time_idx_col: "time_idx"
+  target_col: "pv_output"
+
+  feature_cols:
+    - hour
+    - dayofweek
+    - month
+    - rn
+    - hm
+    - ss
+    - icsr
+    - pv_v
+    - pv_i
+    - pf
+
+  encoder_length: 168
+  prediction_length: 24
+
+  training_cutoff: 8000
+  validation_cutoff: 8500
+  allow_missing_time_idx: false
+
+model:
+  conv_out_channels: 64
+  kernel_size: 3
+  hidden_dim1: 64
+  hidden_dim2: 8
+  activation: "relu"
+  dropout: 0.0
+  use_adaptive_pool: false
+
+train:
+  batch_size: 64
+  num_workers: 0
+  lr: 0.001
+  weight_decay: 0.00001
+  loss_name: "mae"
+  optimizer_name: "adam"
+
+  max_epochs: 50
+  early_stop_patience: 10
+  accelerator: "auto"
+  devices: 1
+  log_every_n_steps: 10
+  run_dir: "outputs/cnn1d_paper_style"
+
+predict:
+  out_dir: "outputs/cnn1d_paper_style/predictions"

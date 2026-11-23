@@ -1,0 +1,41 @@
+run:
+  name: "tft_independence"
+  seed: 42
+  artifacts_dir: "artifacts"
+  reports_dir: "reports"
+
+data:
+  csv_path: datasets/filtered_independence.csv
+  index_is_time: true
+  daily_grid:
+    start_hour: 7
+    end_hour: 17   # inclusive
+  real_cols: ["rn", "hm", "ss", "icsr", "PVV", "PVC", "BAV", "BAC", "OUV", "OUC"]
+  missing_flag_cols: ["PVV", "PVC", "BAV"]
+  fillna_value: 0.0
+  group_id_value: "site0"
+
+split:
+  train_ratio: 0.8
+
+tft:
+  max_encoder_length: 168   # 24*7
+  max_prediction_length: 11
+  batch_size: 64
+  max_epochs: 20
+  hidden_size: 64
+  lstm_layers: 1
+  dropout: 0.1
+  attention_head_size: 4
+  learning_rate: 0.001
+  quantiles: [0.1, 0.5, 0.9]
+
+features:
+  target: "PVV"
+  group_ids: ["series_id"]
+  known_reals: ["time_idx", "hour", "dayofweek", "month","rn","hm","ss", "icsr"]
+  unknown_reals: ["PVV", "PVC", "BAV","OUV","OUC"]
+
+eval:
+  hours_from: 6
+  hours_to: 18

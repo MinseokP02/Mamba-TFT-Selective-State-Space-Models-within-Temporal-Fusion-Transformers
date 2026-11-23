@@ -1,0 +1,90 @@
+run:
+  name: "cnn1d_quantile"
+  seed: 42
+  artifacts_dir: "artifacts"
+  reports_dir: "reports"
+
+data:
+  csv_path: "datasets/tft_utrecht_ID003_weather_07_17.csv"
+
+  index_is_time: false
+  daily_grid:
+    start_hour: 7
+    end_hour: 17
+
+  real_cols:
+    - temperature_2m
+    - relative_humidity_2m
+    - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+    - pv_output
+  missing_flag_cols: "pv_output"
+  fillna_value: 0.0
+  group_id_value: "site0"
+
+  group_col: "series_id"
+  time_idx_col: "time_idx"
+  target_col: "pv_output"
+
+  feature_cols:
+    - temperature_2m
+    - relative_humidity_2m
+    - precipitation
+    - rain
+    - cloud_cover
+    - shortwave_radiation
+    - direct_radiation
+    - diffuse_radiation
+    - direct_normal_irradiance
+    - sunshine_duration
+    - wind_speed_10m
+
+  encoder_length: 99
+  prediction_length: 11
+
+  allow_missing_time_idx: false
+
+split:
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+model:
+  conv_out_channels: 64
+  kernel_size: 3
+  hidden_dim1: 128
+  hidden_dim2: 64
+  activation: "relu"
+  dropout: 0.1
+  use_adaptive_pool: false
+
+train:
+  batch_size: 64
+  num_workers: 0
+  lr: 0.001
+  weight_decay: 0.00001
+  loss_name: "quantile"
+  optimizer_name: "adam"
+  quantiles: [0.1, 0.5, 0.9]
+
+  max_epochs: 100
+  early_stop_patience: 15
+  accelerator: "auto"
+  devices: 1
+  log_every_n_steps: 10
+
+  run_dir: "artifacts/cnn1d_run"
+
+predict:
+  out_dir: "artifacts/cnn1d_run/predictions"
+
+eval:
+  hours_from: 7
+  hours_to: 17

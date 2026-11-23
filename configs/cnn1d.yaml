@@ -1,0 +1,73 @@
+seed: 42
+
+data:
+  csv_path: "datasets/filtered_first.csv"
+
+  # build_df_full에서 사용할 설정
+  index_is_time: true
+  daily_grid:
+    start_hour: 7
+    end_hour: 17   # inclusive
+
+  real_cols: ["rn", "hm", "ss", "icsr", "pv_output", "pv_v", "pv_i", "pf"]
+  missing_flag_cols: ["pv_v", "pv_i", "pf", "pv_output"]
+  fillna_value: 0.0
+  group_id_value: "site0"
+
+  # SequenceDataset / SequenceDataModule에서 사용할 설정
+  group_col: "series_id"
+  time_idx_col: "time_idx"
+  target_col: "pv_output"
+
+  feature_cols:
+    - hour
+    - dayofweek
+    - month
+    - rn
+    - hm
+    - ss
+    - icsr
+    - pv_v
+    - pv_i
+    - pf
+
+  encoder_length: 77
+  prediction_length: 11
+
+  allow_missing_time_idx: false
+
+split:
+  train_ratio: 0.8
+
+model:
+  conv_out_channels: 64
+  kernel_size: 3
+  hidden_dim1: 64
+  hidden_dim2: 8
+  activation: "relu"
+  dropout: 0.1
+  use_adaptive_pool: false
+
+train:
+  batch_size: 64
+  num_workers: 0
+  lr: 0.001
+  weight_decay: 0.00001
+  loss_name: "quantile"
+  optimizer_name: "adam"
+  quantiles: [0.1, 0.5, 0.9]
+
+  max_epochs: 20
+  early_stop_patience: 10
+  accelerator: "auto"
+  devices: 1
+  log_every_n_steps: 10
+
+  run_dir: "artifacts/cnn1d_run"
+
+predict:
+  out_dir: "artifacts/cnn1d_run/predictions"
+
+eval:
+  hours_from: 6
+  hours_to: 18
